@@ -23,13 +23,13 @@ export default async function Home() {
   return (
     <div className="flex flex-1 flex-col bg-zinc-50 px-4 py-8 dark:bg-black sm:px-8">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Mis presupuestos
           </h1>
           <Link
             href="/nuevo"
-            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background"
+            className="self-start rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background sm:self-auto"
           >
             Nuevo presupuesto
           </Link>
