@@ -22,6 +22,8 @@
 
 2. Todas las tareas se trabajan como features o bugfixes y cada una tiene que tener su rama independiente.
 
-3. No se hace un pull request si una tarea no está en hecho.
+3. La rama de integración es `develop`, creada a partir de master. Cada tarea sale de `develop` en su propia rama `feature/<número-de-tarea>` (por ejemplo `feature/2.1`) y vuelve a `develop` cuando está en "En pruebas".
 
-4. No se mergea a master/main si no hay autorización explicita del usuario.
+4. A master/main solo se llega con una pull request que el usuario apruebe. No se mergea ni se hace push directo a master/main bajo ningún concepto, ni con autorización verbal sin pull request.
+
+5. No se hace un pull request a master/main si las tareas que incluye no están en hecho.
