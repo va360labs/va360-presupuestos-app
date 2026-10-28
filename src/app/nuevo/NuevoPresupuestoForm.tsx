@@ -4,6 +4,17 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { crearPresupuestoAction, type CrearPresupuestoState } from "./actions";
 
+export type PresupuestoInicial = {
+  clienteNombre: string;
+  clienteNif: string;
+  clienteDireccion: string;
+  clienteTelefono: string;
+  clienteCorreo: string;
+  condiciones: string;
+  observaciones: string;
+  lineas: { descripcion: string; cantidad: number; precioUnitario: number }[];
+};
+
 type Linea = {
   descripcion: string;
   cantidad: number;
@@ -14,9 +25,19 @@ const lineaVacia: Linea = { descripcion: "", cantidad: 1, precioUnitario: 0 };
 
 const initialState: CrearPresupuestoState = {};
 
-export default function NuevoPresupuestoForm() {
-  const [state, formAction, pending] = useActionState(crearPresupuestoAction, initialState);
-  const [lineas, setLineas] = useState<Linea[]>([{ ...lineaVacia }]);
+export default function NuevoPresupuestoForm({
+  action = crearPresupuestoAction,
+  inicial,
+  submitLabel = "Guardar presupuesto",
+}: {
+  action?: (prev: CrearPresupuestoState, formData: FormData) => Promise<CrearPresupuestoState>;
+  inicial?: PresupuestoInicial;
+  submitLabel?: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, initialState);
+  const [lineas, setLineas] = useState<Linea[]>(
+    inicial && inicial.lineas.length > 0 ? inicial.lineas : [{ ...lineaVacia }],
+  );
   const [dirty, setDirty] = useState(false);
   const savedRef = useRef(false);
 
@@ -69,11 +90,11 @@ export default function NuevoPresupuestoForm() {
           Datos del cliente
         </legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo label="Nombre del cliente" name="clienteNombre" required onInput={marcarSucio} />
-          <Campo label="NIF" name="clienteNif" onInput={marcarSucio} />
-          <Campo label="Dirección" name="clienteDireccion" onInput={marcarSucio} />
-          <Campo label="Teléfono" name="clienteTelefono" type="tel" onInput={marcarSucio} />
-          <Campo label="Correo" name="clienteCorreo" type="email" onInput={marcarSucio} />
+          <Campo label="Nombre del cliente" name="clienteNombre" defaultValue={inicial?.clienteNombre} required onInput={marcarSucio} />
+          <Campo label="NIF" name="clienteNif" defaultValue={inicial?.clienteNif} onInput={marcarSucio} />
+          <Campo label="Dirección" name="clienteDireccion" defaultValue={inicial?.clienteDireccion} onInput={marcarSucio} />
+          <Campo label="Teléfono" name="clienteTelefono" type="tel" defaultValue={inicial?.clienteTelefono} onInput={marcarSucio} />
+          <Campo label="Correo" name="clienteCorreo" type="email" defaultValue={inicial?.clienteCorreo} onInput={marcarSucio} />
         </div>
       </fieldset>
 
@@ -146,8 +167,8 @@ export default function NuevoPresupuestoForm() {
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Condiciones y observaciones
         </legend>
-        <TextArea label="Condiciones" name="condiciones" onInput={marcarSucio} />
-        <TextArea label="Observaciones" name="observaciones" onInput={marcarSucio} />
+        <TextArea label="Condiciones" name="condiciones" defaultValue={inicial?.condiciones} onInput={marcarSucio} />
+        <TextArea label="Observaciones" name="observaciones" defaultValue={inicial?.observaciones} onInput={marcarSucio} />
       </fieldset>
 
       <div className="flex items-center justify-between rounded-lg bg-zinc-100 px-4 py-3 dark:bg-zinc-900">
@@ -169,7 +190,7 @@ export default function NuevoPresupuestoForm() {
           disabled={pending}
           className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background disabled:opacity-60"
         >
-          {pending ? "Guardando…" : "Guardar presupuesto"}
+          {pending ? "Guardando…" : submitLabel}
         </button>
         <Link
           href="/"
@@ -186,11 +207,13 @@ function Campo({
   label,
   name,
   type = "text",
+  defaultValue,
   required,
   onInput,
 }: {
   label: string;
   name: string;
+  defaultValue?: string;
   type?: string;
   required?: boolean;
   onInput?: () => void;
@@ -204,6 +227,7 @@ function Campo({
       <input
         name={name}
         type={type}
+        defaultValue={defaultValue}
         required={required}
         onInput={onInput}
         className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
@@ -215,10 +239,12 @@ function Campo({
 function TextArea({
   label,
   name,
+  defaultValue,
   onInput,
 }: {
   label: string;
   name: string;
+  defaultValue?: string;
   onInput?: () => void;
 }) {
   return (
@@ -226,6 +252,7 @@ function TextArea({
       <span className="text-zinc-600 dark:text-zinc-400">{label}</span>
       <textarea
         name={name}
+        defaultValue={defaultValue}
         onInput={onInput}
         rows={3}
         className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"

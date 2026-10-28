@@ -21,6 +21,35 @@ export type NuevoPresupuestoInput = {
   lineas: LineaInput[];
 };
 
+function validarYNormalizar(input: NuevoPresupuestoInput) {
+  const lineasValidas = input.lineas.filter((l) => l.descripcion.trim() !== "");
+
+  if (!input.clienteNombre.trim()) {
+    throw new Error("El nombre del cliente es obligatorio.");
+  }
+  if (lineasValidas.length === 0) {
+    throw new Error("Añade al menos una línea de concepto.");
+  }
+
+  return {
+    datos: {
+      clienteNombre: input.clienteNombre.trim(),
+      clienteNif: input.clienteNif?.trim() || null,
+      clienteDireccion: input.clienteDireccion?.trim() || null,
+      clienteTelefono: input.clienteTelefono?.trim() || null,
+      clienteCorreo: input.clienteCorreo?.trim() || null,
+      condiciones: input.condiciones?.trim() || null,
+      observaciones: input.observaciones?.trim() || null,
+    },
+    lineas: lineasValidas.map((l, i) => ({
+      descripcion: l.descripcion.trim(),
+      cantidad: l.cantidad,
+      precioUnitario: l.precioUnitario,
+      orden: i,
+    })),
+  };
+}
+
 export function totalDeLineas(lineas: LineaInput[]) {
   return lineas.reduce((acc, l) => acc + l.cantidad * l.precioUnitario, 0);
 }
@@ -74,14 +103,7 @@ function esperar(ms: number) {
 }
 
 export async function crearPresupuesto(input: NuevoPresupuestoInput, client: PrismaClient = prisma) {
-  const lineasValidas = input.lineas.filter((l) => l.descripcion.trim() !== "");
-
-  if (!input.clienteNombre.trim()) {
-    throw new Error("El nombre del cliente es obligatorio.");
-  }
-  if (lineasValidas.length === 0) {
-    throw new Error("Añade al menos una línea de concepto.");
-  }
+  const { datos, lineas } = validarYNormalizar(input);
 
   for (let intento = 0; intento < MAX_INTENTOS_NUMERACION; intento++) {
     try {
@@ -96,24 +118,7 @@ export async function crearPresupuesto(input: NuevoPresupuestoInput, client: Pri
         const numero = Math.max(ultimo?.numero ?? 0, config?.numeroBase ?? 0) + 1;
 
         return tx.presupuesto.create({
-          data: {
-            numero,
-            clienteNombre: input.clienteNombre.trim(),
-            clienteNif: input.clienteNif?.trim() || null,
-            clienteDireccion: input.clienteDireccion?.trim() || null,
-            clienteTelefono: input.clienteTelefono?.trim() || null,
-            clienteCorreo: input.clienteCorreo?.trim() || null,
-            condiciones: input.condiciones?.trim() || null,
-            observaciones: input.observaciones?.trim() || null,
-            lineas: {
-              create: lineasValidas.map((l, i) => ({
-                descripcion: l.descripcion.trim(),
-                cantidad: l.cantidad,
-                precioUnitario: l.precioUnitario,
-                orden: i,
-              })),
-            },
-          },
+          data: { numero, ...datos, lineas: { create: lineas } },
         });
       });
     } catch (err) {
@@ -126,4 +131,28 @@ export async function crearPresupuesto(input: NuevoPresupuestoInput, client: Pri
   }
 
   throw new Error("No se pudo asignar un número de presupuesto, inténtalo de nuevo.");
+}
+
+export async function obtenerPresupuesto(id: string) {
+  return prisma.presupuesto.findUnique({
+    where: { id },
+    include: { lineas: { orderBy: { orden: "asc" } } },
+  });
+}
+
+// El número no forma parte de lo editable: se asigna al crear y no cambia nunca.
+export async function actualizarPresupuesto(
+  id: string,
+  input: NuevoPresupuestoInput,
+  client: PrismaClient = prisma,
+) {
+  const { datos, lineas } = validarYNormalizar(input);
+
+  return client.$transaction(async (tx) => {
+    await tx.lineaPresupuesto.deleteMany({ where: { presupuestoId: id } });
+    return tx.presupuesto.update({
+      where: { id },
+      data: { ...datos, lineas: { create: lineas } },
+    });
+  });
 }
