@@ -21,6 +21,11 @@ En esta fase todavía se escribe todo a mano: el nombre del cliente, los
 conceptos y los precios. Nada viene guardado de antes. Los presupuestos nacen
 con estado "pendiente de respuesta" y de momento nadie lo cambia.
 
+Esta fase incluye también poder abrir un presupuesto ya guardado desde la
+lista y corregirlo (por ejemplo, un precio mal escrito): es lo que permite
+demostrar que el número asignado al guardar no cambia nunca, aunque el
+presupuesto se edite después.
+
 **Cómo lo compruebo al terminar**
 
 Abro la herramienta, pulso "Nuevo presupuesto", escribo un cliente inventado y
@@ -28,7 +33,9 @@ dos líneas con su precio, y le doy a guardar. Vuelvo a la lista y veo ahí mi
 presupuesto, con el nombre que escribí, la fecha de hoy, el importe sumado y la
 palabra "pendiente". Repito la operación tres veces seguidas y compruebo con el
 dedo en la pantalla que los números salen 1, 2 y 3, sin saltos y sin repetirse.
-Lo miro también desde el móvil y la lista se lee sin tener que ampliar.
+Pincho uno de ellos, cambio un precio, guardo y compruebo que en la lista sale
+el importe nuevo y que el número del presupuesto sigue siendo el mismo. Lo
+miro también desde el móvil y la lista se lee sin tener que ampliar.
 
 ---
 

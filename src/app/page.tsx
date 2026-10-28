@@ -27,12 +27,17 @@ export default async function Home() {
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Mis presupuestos
           </h1>
-          <Link
-            href="/nuevo"
-            className="self-start rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background sm:self-auto"
-          >
-            Nuevo presupuesto
-          </Link>
+          <div className="flex items-center gap-4 self-start sm:self-auto">
+            <Link href="/ajustes" className="text-sm text-zinc-500 underline">
+              Ajustes
+            </Link>
+            <Link
+              href="/nuevo"
+              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background"
+            >
+              Nuevo presupuesto
+            </Link>
+          </div>
         </div>
 
         {presupuestos.length === 0 ? (
