@@ -34,6 +34,11 @@ model Presupuesto {
   lineas         LineaPresupuesto[]
 }
 
+model Configuracion {
+  id         String @id @default("singleton")
+  numeroBase Int    @default(0)
+}
+
 model LineaPresupuesto {
   id            String      @id @default(cuid())
   presupuesto   Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
