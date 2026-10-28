@@ -28,12 +28,12 @@ export default async function Home() {
             Mis presupuestos
           </h1>
           <div className="flex items-center gap-4 self-start sm:self-auto">
-            <Link href="/ajustes" className="text-sm text-zinc-500 underline">
+            <Link href="/ajustes" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
               Ajustes
             </Link>
             <Link
               href="/nuevo"
-              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background"
+              className="flex min-h-11 items-center rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background"
             >
               Nuevo presupuesto
             </Link>

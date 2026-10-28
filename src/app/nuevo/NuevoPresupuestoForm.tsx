@@ -112,7 +112,7 @@ export default function NuevoPresupuestoForm({
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-zinc-600 dark:text-zinc-400">Descripción</span>
                 <input
-                  className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
                   value={linea.descripcion}
                   onChange={(e) => actualizarLinea(i, { descripcion: e.target.value })}
                   placeholder="Reportaje boda día completo"
@@ -125,7 +125,7 @@ export default function NuevoPresupuestoForm({
                   inputMode="decimal"
                   min={0}
                   step="any"
-                  className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
                   value={linea.cantidad}
                   onChange={(e) => actualizarLinea(i, { cantidad: Number(e.target.value) })}
                 />
@@ -137,7 +137,7 @@ export default function NuevoPresupuestoForm({
                   inputMode="decimal"
                   min={0}
                   step="any"
-                  className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
                   value={linea.precioUnitario}
                   onChange={(e) => actualizarLinea(i, { precioUnitario: Number(e.target.value) })}
                 />
@@ -157,7 +157,7 @@ export default function NuevoPresupuestoForm({
         <button
           type="button"
           onClick={anadirLinea}
-          className="self-start rounded-md border border-dashed border-zinc-400 px-4 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:text-zinc-300"
+          className="self-start min-h-11 rounded-md border border-dashed border-zinc-400 px-4 py-2 text-sm text-zinc-700 dark:border-zinc-600 dark:text-zinc-300"
         >
           + Añadir línea
         </button>
@@ -188,13 +188,13 @@ export default function NuevoPresupuestoForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background disabled:opacity-60"
+          className="min-h-12 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background disabled:opacity-60"
         >
           {pending ? "Guardando…" : submitLabel}
         </button>
         <Link
           href="/"
-          className="rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
+          className="flex min-h-12 items-center rounded-full border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
         >
           Cancelar
         </Link>
@@ -230,7 +230,7 @@ function Campo({
         defaultValue={defaultValue}
         required={required}
         onInput={onInput}
-        className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+        className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
       />
     </label>
   );
@@ -255,7 +255,7 @@ function TextArea({
         defaultValue={defaultValue}
         onInput={onInput}
         rows={3}
-        className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
+        className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
       />
     </label>
   );
