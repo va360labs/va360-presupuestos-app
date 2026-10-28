@@ -1,16 +1,20 @@
 @AGENTS.md
 
+# IMPORTANTE
+
+1. Usar taskkill si es necesario, pero SOLO sobre el proceso o los procesos levantados por este proyecto. En este mismo equipo, puede correr otros proyectos u otros procesos independientes.
+
 # PROCEDIMIENTO DE DESARROLLO PARA EL PROYECTO
 
-1.- Una tarea no se da por realizada, si no tenemos evidencias de que está terminada con test y pantallazos
+1.- Una tarea o una subtarea no se da por realizada, si no tenemos evidencias de que está terminada con test y pantallazos -> Los pantallazos, deben subirse a Notion para verse en la descripción del trabjo realizado. Si hay una tarea que no se puede probar porque depende de una funcionalidad que se va a desarrollar más adelante, la dejamos en estado "Bloqueado".
 
-2.- Antes de iniciar una tarea, moverla al estado "En desarrollo"
+2.- Antes de iniciar una tarea o una subtarea, moverla al estado "En desarrollo"
 
-3.- Una vez esté la tarea pendiente de probar por el usuario la moveremos al estado "En pruebas"
+3.- Una vez esté la tarea o una subtarea pendiente de probar por el usuario la moveremos al estado "En pruebas"
 
-4.- Toda la documentación, tareas y planificación debe estar en notion -> https://app.notion.com/p/1c031a3c683c4ee88915ec666e623f5e?v=3cab609a124c819f9916000c029008f7
+4.- Toda la documentación, tarea o una subtarea y planificación debe estar en notion -> https://app.notion.com/p/1c031a3c683c4ee88915ec666e623f5e?v=3cab609a124c819f9916000c029008f7
 
-5.- En cada tarea, necesitamos que documentes lo que se ha realizado.
+5.- En cada tarea o una subtarea, necesitamos que documentes lo que se ha realizado.
 
 6.- No incluyas que estamos trabajando con Claude ni Claude Code en Git, Comentarios, Commit ni cualquier documentación. Este trabajo lo está realizando Valentín Ayesa para VA360 Academy.
 
