@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 
 const CONFIGURACION_ID = "singleton";
-const MAX_INTENTOS_NUMERACION = 5;
+const MAX_INTENTOS_NUMERACION = 12;
 
 export type LineaInput = {
   descripcion: string;
@@ -60,12 +60,17 @@ export async function establecerNumeroBase(numero: number) {
   });
 }
 
-function esColisionDeNumero(err: unknown) {
-  return (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2002" &&
-    (err.meta?.target as string[] | undefined)?.includes("numero")
-  );
+function esReintentable(err: unknown) {
+  if (!(err instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  // P2002: otro guardado se llevó ese número. P1008/P2034: la base estaba ocupada
+  // o la transacción chocó con otra escritura simultánea.
+  const colisionDeNumero =
+    err.code === "P2002" && (err.meta?.target as string[] | undefined)?.includes("numero");
+  return colisionDeNumero || err.code === "P1008" || err.code === "P2034";
+}
+
+function esperar(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function crearPresupuesto(input: NuevoPresupuestoInput, client: PrismaClient = prisma) {
@@ -112,7 +117,8 @@ export async function crearPresupuesto(input: NuevoPresupuestoInput, client: Pri
         });
       });
     } catch (err) {
-      if (esColisionDeNumero(err) && intento < MAX_INTENTOS_NUMERACION - 1) {
+      if (esReintentable(err) && intento < MAX_INTENTOS_NUMERACION - 1) {
+        await esperar(20 * (intento + 1) + Math.random() * 30);
         continue;
       }
       throw err;
