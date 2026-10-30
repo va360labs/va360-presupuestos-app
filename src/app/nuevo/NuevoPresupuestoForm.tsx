@@ -4,7 +4,17 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { crearPresupuestoAction, type CrearPresupuestoState } from "./actions";
 
+export type ClienteOpcion = {
+  id: string;
+  nombre: string;
+  nif: string;
+  direccion: string;
+  telefono: string;
+  correo: string;
+};
+
 export type PresupuestoInicial = {
+  clienteId: string;
   clienteNombre: string;
   clienteNif: string;
   clienteDireccion: string;
@@ -29,12 +39,22 @@ export default function NuevoPresupuestoForm({
   action = crearPresupuestoAction,
   inicial,
   submitLabel = "Guardar presupuesto",
+  clientes = [],
 }: {
   action?: (prev: CrearPresupuestoState, formData: FormData) => Promise<CrearPresupuestoState>;
   inicial?: PresupuestoInicial;
   submitLabel?: string;
+  clientes?: ClienteOpcion[];
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [clienteId, setClienteId] = useState(inicial?.clienteId ?? "");
+  const [cliente, setCliente] = useState({
+    nombre: inicial?.clienteNombre ?? "",
+    nif: inicial?.clienteNif ?? "",
+    direccion: inicial?.clienteDireccion ?? "",
+    telefono: inicial?.clienteTelefono ?? "",
+    correo: inicial?.clienteCorreo ?? "",
+  });
   const [lineas, setLineas] = useState<Linea[]>(
     inicial && inicial.lineas.length > 0 ? inicial.lineas : [{ ...lineaVacia }],
   );
@@ -58,6 +78,33 @@ export default function NuevoPresupuestoForm({
 
   function marcarSucio() {
     if (!dirty) setDirty(true);
+  }
+
+  function elegirCliente(id: string) {
+    marcarSucio();
+    const elegido = clientes.find((c) => c.id === id);
+    if (elegido) {
+      setCliente({
+        nombre: elegido.nombre,
+        nif: elegido.nif,
+        direccion: elegido.direccion,
+        telefono: elegido.telefono,
+        correo: elegido.correo,
+      });
+    } else if (clienteId) {
+      setCliente({ nombre: "", nif: "", direccion: "", telefono: "", correo: "" });
+    }
+    setClienteId(id);
+  }
+
+  function cambiarCliente(campo: keyof typeof cliente, valor: string) {
+    marcarSucio();
+    setCliente((prev) => ({ ...prev, [campo]: valor }));
+    // Si cambia el nombre, ya no es el cliente guardado que se eligió.
+    if (campo === "nombre" && clienteId) {
+      const elegido = clientes.find((c) => c.id === clienteId);
+      if (elegido && elegido.nombre !== valor) setClienteId("");
+    }
   }
 
   function actualizarLinea(index: number, cambios: Partial<Linea>) {
@@ -89,12 +136,28 @@ export default function NuevoPresupuestoForm({
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Datos del cliente
         </legend>
+        <input type="hidden" name="clienteId" value={clienteId} />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-600 dark:text-zinc-400">Cliente guardado</span>
+          <select
+            value={clienteId}
+            onChange={(e) => elegirCliente(e.target.value)}
+            className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value="">Cliente nuevo (escríbelo abajo)</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo label="Nombre del cliente" name="clienteNombre" defaultValue={inicial?.clienteNombre} required onInput={marcarSucio} />
-          <Campo label="NIF" name="clienteNif" defaultValue={inicial?.clienteNif} onInput={marcarSucio} />
-          <Campo label="Dirección" name="clienteDireccion" defaultValue={inicial?.clienteDireccion} onInput={marcarSucio} />
-          <Campo label="Teléfono" name="clienteTelefono" type="tel" defaultValue={inicial?.clienteTelefono} onInput={marcarSucio} />
-          <Campo label="Correo" name="clienteCorreo" type="email" defaultValue={inicial?.clienteCorreo} onInput={marcarSucio} />
+          <Campo label="Nombre del cliente" name="clienteNombre" value={cliente.nombre} required onChange={(v) => cambiarCliente("nombre", v)} />
+          <Campo label="NIF" name="clienteNif" value={cliente.nif} onChange={(v) => cambiarCliente("nif", v)} />
+          <Campo label="Dirección" name="clienteDireccion" value={cliente.direccion} onChange={(v) => cambiarCliente("direccion", v)} />
+          <Campo label="Teléfono" name="clienteTelefono" type="tel" value={cliente.telefono} onChange={(v) => cambiarCliente("telefono", v)} />
+          <Campo label="Correo" name="clienteCorreo" type="email" value={cliente.correo} onChange={(v) => cambiarCliente("correo", v)} />
         </div>
       </fieldset>
 
@@ -207,16 +270,16 @@ function Campo({
   label,
   name,
   type = "text",
-  defaultValue,
+  value,
   required,
-  onInput,
+  onChange,
 }: {
   label: string;
   name: string;
-  defaultValue?: string;
+  value: string;
   type?: string;
   required?: boolean;
-  onInput?: () => void;
+  onChange: (valor: string) => void;
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
@@ -227,9 +290,9 @@ function Campo({
       <input
         name={name}
         type={type}
-        defaultValue={defaultValue}
+        value={value}
         required={required}
-        onInput={onInput}
+        onChange={(e) => onChange(e.target.value)}
         className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
       />
     </label>

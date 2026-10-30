@@ -19,6 +19,7 @@ export async function actualizarPresupuestoAction(
 
   try {
     await actualizarPresupuesto(id, {
+      clienteId: String(formData.get("clienteId") ?? ""),
       clienteNombre: String(formData.get("clienteNombre") ?? ""),
       clienteNif: String(formData.get("clienteNif") ?? ""),
       clienteDireccion: String(formData.get("clienteDireccion") ?? ""),

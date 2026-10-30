@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { obtenerPresupuesto } from "@/lib/presupuestos";
+import { listarClientes } from "@/lib/clientes";
 import NuevoPresupuestoForm from "@/app/nuevo/NuevoPresupuestoForm";
 import { actualizarPresupuestoAction } from "./actions";
 
@@ -13,6 +14,7 @@ export default async function EditarPresupuestoPage({
   const { id } = await params;
   const presupuesto = await obtenerPresupuesto(id);
   if (!presupuesto) notFound();
+  const clientes = await listarClientes();
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 px-4 py-10 dark:bg-black sm:px-8">
@@ -23,7 +25,16 @@ export default async function EditarPresupuestoPage({
         <NuevoPresupuestoForm
           action={actualizarPresupuestoAction.bind(null, presupuesto.id)}
           submitLabel="Guardar cambios"
+          clientes={clientes.map((c) => ({
+            id: c.id,
+            nombre: c.nombre,
+            nif: c.nif ?? "",
+            direccion: c.direccion ?? "",
+            telefono: c.telefono ?? "",
+            correo: c.correo ?? "",
+          }))}
           inicial={{
+            clienteId: presupuesto.clienteId ?? "",
             clienteNombre: presupuesto.clienteNombre,
             clienteNif: presupuesto.clienteNif ?? "",
             clienteDireccion: presupuesto.clienteDireccion ?? "",

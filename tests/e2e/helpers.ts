@@ -19,6 +19,13 @@ export function capturarAlTerminar() {
   });
 }
 
+// Abre una pantalla y espera a que React termine de hidratarla: si se escribe antes,
+// los campos controlados se vacían al hidratar (sobre todo en WebKit).
+export async function abrir(page: Page, url: string) {
+  await page.goto(url);
+  await page.waitForLoadState("networkidle");
+}
+
 // Sufijo único por ejecución y tamaño de pantalla, para que los datos de una prueba no choquen con otra.
 export function unico(texto: string) {
   return `${texto} ${test.info().project.name} ${Date.now().toString(36)}`;
@@ -39,10 +46,30 @@ export async function numeroDe(page: Page, cliente: string) {
 }
 
 export async function crearPresupuestoSencillo(page: Page, cliente: string) {
-  await page.goto("/nuevo");
+  await abrir(page, "/nuevo");
   await page.getByLabel("Nombre del cliente").fill(cliente);
   await page.getByLabel("Descripción").fill("Reportaje de prueba");
   await page.getByLabel("Precio (€)").fill("100");
   await page.getByRole("button", { name: "Guardar presupuesto" }).click();
   await expect(page).toHaveURL(/\/$/);
+}
+
+export type DatosCliente = {
+  nombre: string;
+  nif?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+};
+
+// Da de alta un cliente desde la pantalla de clientes, como lo haría Marta.
+export async function crearCliente(page: Page, c: DatosCliente) {
+  await abrir(page, "/clientes/nuevo");
+  await page.getByLabel("Nombre", { exact: true }).fill(c.nombre);
+  if (c.nif) await page.getByLabel("NIF", { exact: true }).fill(c.nif);
+  if (c.direccion) await page.getByLabel("Dirección", { exact: true }).fill(c.direccion);
+  if (c.telefono) await page.getByLabel("Teléfono", { exact: true }).fill(c.telefono);
+  if (c.correo) await page.getByLabel("Correo", { exact: true }).fill(c.correo);
+  await page.getByRole("button", { name: "Guardar cliente" }).click();
+  await expect(page).toHaveURL(/\/clientes$/);
 }
