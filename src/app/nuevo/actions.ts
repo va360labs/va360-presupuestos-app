@@ -22,6 +22,7 @@ export async function crearPresupuestoAction(
 
   try {
     await crearPresupuesto({
+      clienteId: String(formData.get("clienteId") ?? ""),
       clienteNombre: String(formData.get("clienteNombre") ?? ""),
       clienteNif: String(formData.get("clienteNif") ?? ""),
       clienteDireccion: String(formData.get("clienteDireccion") ?? ""),

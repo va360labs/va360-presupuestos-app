@@ -31,7 +31,21 @@ model Presupuesto {
   observaciones  String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+  clienteId      String?
+  cliente        Cliente?          @relation(fields: [clienteId], references: [id], onDelete: SetNull)
   lineas         LineaPresupuesto[]
+}
+
+model Cliente {
+  id           String        @id @default(cuid())
+  nombre       String
+  nif          String?
+  direccion    String?
+  telefono     String?
+  correo       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  presupuestos Presupuesto[]
 }
 
 model Configuracion {

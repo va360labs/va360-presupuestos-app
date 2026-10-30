@@ -27,7 +27,10 @@ export default async function Home() {
           <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">
             Mis presupuestos
           </h1>
-          <div className="flex items-center gap-4 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 self-start sm:self-auto">
+            <Link href="/clientes" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
+              Clientes
+            </Link>
             <Link href="/ajustes" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
               Ajustes
             </Link>
