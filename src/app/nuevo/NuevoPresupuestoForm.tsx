@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { crearPresupuestoAction, type CrearPresupuestoState } from "./actions";
+import { TIPOS, esTipo, type CampoTipo, type DatosTipo } from "@/lib/tipos";
 
 export type ClienteOpcion = {
   id: string;
@@ -20,6 +21,8 @@ export type ServicioOpcion = {
 };
 
 export type PresupuestoInicial = {
+  tipo: string;
+  datosTipo: DatosTipo;
   clienteId: string;
   clienteNombre: string;
   clienteNif: string;
@@ -55,6 +58,9 @@ export default function NuevoPresupuestoForm({
   servicios?: ServicioOpcion[];
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [tipo, setTipo] = useState(inicial?.tipo ?? "");
+  // Se guardan los datos de los tres tipos: si Marta cambia de tipo y vuelve, no pierde lo escrito.
+  const [datosTipo, setDatosTipo] = useState<DatosTipo>(inicial?.datosTipo ?? {});
   const [clienteId, setClienteId] = useState(inicial?.clienteId ?? "");
   const [cliente, setCliente] = useState({
     nombre: inicial?.clienteNombre ?? "",
@@ -86,6 +92,11 @@ export default function NuevoPresupuestoForm({
 
   function marcarSucio() {
     if (!dirty) setDirty(true);
+  }
+
+  function cambiarDatoTipo(clave: string, valor: string) {
+    marcarSucio();
+    setDatosTipo((prev) => ({ ...prev, [clave]: valor }));
   }
 
   function elegirCliente(id: string) {
@@ -151,6 +162,49 @@ export default function NuevoPresupuestoForm({
       className="flex w-full max-w-2xl flex-col gap-8"
     >
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
+      <input type="hidden" name="datosTipo" value={JSON.stringify(datosTipo)} />
+
+      <fieldset className="flex flex-col gap-4">
+        <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Tipo de trabajo
+        </legend>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="sr-only">Tipo de trabajo</span>
+          <select
+            name="tipo"
+            value={tipo}
+            onChange={(e) => {
+              marcarSucio();
+              setTipo(e.target.value);
+            }}
+            className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value="">Elige el tipo…</option>
+            {Object.entries(TIPOS).map(([clave, t]) => (
+              <option key={clave} value={clave}>
+                {t.etiqueta}
+              </option>
+            ))}
+          </select>
+        </label>
+        {esTipo(tipo) && (
+          <>
+            <p className="self-start rounded-full bg-zinc-200 px-3 py-1 text-sm font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              Presupuesto de {TIPOS[tipo].etiqueta.toLowerCase()}
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {TIPOS[tipo].campos.map((campo) => (
+                <CampoDelTipo
+                  key={campo.clave}
+                  campo={campo}
+                  valor={datosTipo[campo.clave] ?? ""}
+                  onChange={(v) => cambiarDatoTipo(campo.clave, v)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </fieldset>
 
       <fieldset className="flex flex-col gap-4">
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
@@ -333,6 +387,44 @@ function Campo({
         onChange={(e) => onChange(e.target.value)}
         className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
       />
+    </label>
+  );
+}
+
+function CampoDelTipo({
+  campo,
+  valor,
+  onChange,
+}: {
+  campo: CampoTipo;
+  valor: string;
+  onChange: (valor: string) => void;
+}) {
+  const clases =
+    "min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900";
+  return (
+    <label className="flex flex-col gap-1 text-sm">
+      <span className="text-zinc-600 dark:text-zinc-400">{campo.etiqueta}</span>
+      {campo.control === "opciones" ? (
+        <select value={valor} onChange={(e) => onChange(e.target.value)} className={clases}>
+          <option value="">Elige…</option>
+          {campo.opciones?.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={campo.control === "fecha" ? "date" : campo.control === "numero" ? "number" : "text"}
+          inputMode={campo.control === "numero" ? "decimal" : undefined}
+          min={campo.control === "numero" ? 0 : undefined}
+          step={campo.control === "numero" ? "any" : undefined}
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          className={clases}
+        />
+      )}
     </label>
   );
 }

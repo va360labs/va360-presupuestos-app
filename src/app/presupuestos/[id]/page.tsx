@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { obtenerPresupuesto } from "@/lib/presupuestos";
 import { listarClientes } from "@/lib/clientes";
 import { listarServicios } from "@/lib/servicios";
+import { leerDatosTipo } from "@/lib/tipos";
 import NuevoPresupuestoForm from "@/app/nuevo/NuevoPresupuestoForm";
 import { actualizarPresupuestoAction } from "./actions";
 
@@ -36,6 +37,8 @@ export default async function EditarPresupuestoPage({
             correo: c.correo ?? "",
           }))}
           inicial={{
+            tipo: presupuesto.tipo ?? "",
+            datosTipo: leerDatosTipo(presupuesto.datosTipo),
             clienteId: presupuesto.clienteId ?? "",
             clienteNombre: presupuesto.clienteNombre,
             clienteNif: presupuesto.clienteNif ?? "",

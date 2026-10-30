@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { leerDatosTipo } from "@/lib/tipos";
 import { crearPresupuesto, type LineaInput } from "@/lib/presupuestos";
 
 export type CrearPresupuestoState = {
@@ -22,6 +23,8 @@ export async function crearPresupuestoAction(
 
   try {
     await crearPresupuesto({
+      tipo: String(formData.get("tipo") ?? ""),
+      datosTipo: leerDatosTipo(String(formData.get("datosTipo") ?? "")),
       clienteId: String(formData.get("clienteId") ?? ""),
       clienteNombre: String(formData.get("clienteNombre") ?? ""),
       clienteNif: String(formData.get("clienteNif") ?? ""),
