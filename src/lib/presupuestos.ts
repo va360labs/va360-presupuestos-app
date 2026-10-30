@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import { datosDelTipo, esTipo, type DatosTipo } from "@/lib/tipos";
 
 const CONFIGURACION_ID = "singleton";
 const MAX_INTENTOS_NUMERACION = 12;
@@ -11,6 +12,8 @@ export type LineaInput = {
 };
 
 export type NuevoPresupuestoInput = {
+  tipo?: string;
+  datosTipo?: DatosTipo;
   clienteId?: string;
   clienteNombre: string;
   clienteNif?: string;
@@ -32,8 +35,13 @@ function validarYNormalizar(input: NuevoPresupuestoInput) {
     throw new Error("Añade al menos una línea de concepto.");
   }
 
+  const tipo = esTipo(input.tipo) ? input.tipo : null;
+  const datosTipo = tipo ? datosDelTipo(tipo, input.datosTipo ?? {}) : {};
+
   return {
     datos: {
+      tipo,
+      datosTipo: Object.keys(datosTipo).length > 0 ? JSON.stringify(datosTipo) : null,
       clienteId: input.clienteId || null,
       clienteNombre: input.clienteNombre.trim(),
       clienteNif: input.clienteNif?.trim() || null,
