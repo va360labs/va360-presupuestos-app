@@ -73,3 +73,12 @@ export async function crearCliente(page: Page, c: DatosCliente) {
   await page.getByRole("button", { name: "Guardar cliente" }).click();
   await expect(page).toHaveURL(/\/clientes$/);
 }
+
+// Da de alta un servicio habitual desde la pantalla de servicios.
+export async function crearServicio(page: Page, descripcion: string, precio: number) {
+  await abrir(page, "/servicios/nuevo");
+  await page.getByLabel("Descripción").fill(descripcion);
+  await page.getByLabel("Precio (€)").fill(String(precio));
+  await page.getByRole("button", { name: "Guardar servicio" }).click();
+  await expect(page).toHaveURL(/\/servicios$/);
+}
