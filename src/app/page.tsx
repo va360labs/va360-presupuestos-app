@@ -31,6 +31,9 @@ export default async function Home() {
             <Link href="/clientes" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
               Clientes
             </Link>
+            <Link href="/servicios" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
+              Servicios
+            </Link>
             <Link href="/ajustes" className="flex min-h-11 items-center text-sm text-zinc-500 underline">
               Ajustes
             </Link>

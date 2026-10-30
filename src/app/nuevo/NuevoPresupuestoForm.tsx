@@ -13,6 +13,12 @@ export type ClienteOpcion = {
   correo: string;
 };
 
+export type ServicioOpcion = {
+  id: string;
+  descripcion: string;
+  precio: number;
+};
+
 export type PresupuestoInicial = {
   clienteId: string;
   clienteNombre: string;
@@ -40,11 +46,13 @@ export default function NuevoPresupuestoForm({
   inicial,
   submitLabel = "Guardar presupuesto",
   clientes = [],
+  servicios = [],
 }: {
   action?: (prev: CrearPresupuestoState, formData: FormData) => Promise<CrearPresupuestoState>;
   inicial?: PresupuestoInicial;
   submitLabel?: string;
   clientes?: ClienteOpcion[];
+  servicios?: ServicioOpcion[];
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const [clienteId, setClienteId] = useState(inicial?.clienteId ?? "");
@@ -112,6 +120,18 @@ export default function NuevoPresupuestoForm({
     setLineas((prev) => prev.map((l, i) => (i === index ? { ...l, ...cambios } : l)));
   }
 
+  // El servicio entra como una línea nueva con su precio; después es una línea más del
+  // presupuesto, así que retocarla no toca el catálogo.
+  function anadirServicio(id: string) {
+    const servicio = servicios.find((s) => s.id === id);
+    if (!servicio) return;
+    marcarSucio();
+    const nueva = { descripcion: servicio.descripcion, cantidad: 1, precioUnitario: servicio.precio };
+    setLineas((prev) =>
+      prev.length === 1 && !prev[0].descripcion && !prev[0].precioUnitario ? [nueva] : [...prev, nueva],
+    );
+  }
+
   function anadirLinea() {
     marcarSucio();
     setLineas((prev) => [...prev, { ...lineaVacia }]);
@@ -165,6 +185,24 @@ export default function NuevoPresupuestoForm({
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Conceptos
         </legend>
+
+        {servicios.length > 0 && (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-600 dark:text-zinc-400">Añadir servicio guardado</span>
+            <select
+              value=""
+              onChange={(e) => anadirServicio(e.target.value)}
+              className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">Elige un servicio…</option>
+              {servicios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.descripcion}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="flex flex-col gap-3">
           {lineas.map((linea, i) => (
