@@ -3,8 +3,27 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { crearPresupuestoAction, type CrearPresupuestoState } from "./actions";
+import { TIPOS, esTipo, type CampoTipo, type DatosTipo } from "@/lib/tipos";
+
+export type ClienteOpcion = {
+  id: string;
+  nombre: string;
+  nif: string;
+  direccion: string;
+  telefono: string;
+  correo: string;
+};
+
+export type ServicioOpcion = {
+  id: string;
+  descripcion: string;
+  precio: number;
+};
 
 export type PresupuestoInicial = {
+  tipo: string;
+  datosTipo: DatosTipo;
+  clienteId: string;
   clienteNombre: string;
   clienteNif: string;
   clienteDireccion: string;
@@ -29,12 +48,27 @@ export default function NuevoPresupuestoForm({
   action = crearPresupuestoAction,
   inicial,
   submitLabel = "Guardar presupuesto",
+  clientes = [],
+  servicios = [],
 }: {
   action?: (prev: CrearPresupuestoState, formData: FormData) => Promise<CrearPresupuestoState>;
   inicial?: PresupuestoInicial;
   submitLabel?: string;
+  clientes?: ClienteOpcion[];
+  servicios?: ServicioOpcion[];
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const [tipo, setTipo] = useState(inicial?.tipo ?? "");
+  // Se guardan los datos de los tres tipos: si Marta cambia de tipo y vuelve, no pierde lo escrito.
+  const [datosTipo, setDatosTipo] = useState<DatosTipo>(inicial?.datosTipo ?? {});
+  const [clienteId, setClienteId] = useState(inicial?.clienteId ?? "");
+  const [cliente, setCliente] = useState({
+    nombre: inicial?.clienteNombre ?? "",
+    nif: inicial?.clienteNif ?? "",
+    direccion: inicial?.clienteDireccion ?? "",
+    telefono: inicial?.clienteTelefono ?? "",
+    correo: inicial?.clienteCorreo ?? "",
+  });
   const [lineas, setLineas] = useState<Linea[]>(
     inicial && inicial.lineas.length > 0 ? inicial.lineas : [{ ...lineaVacia }],
   );
@@ -60,9 +94,53 @@ export default function NuevoPresupuestoForm({
     if (!dirty) setDirty(true);
   }
 
+  function cambiarDatoTipo(clave: string, valor: string) {
+    marcarSucio();
+    setDatosTipo((prev) => ({ ...prev, [clave]: valor }));
+  }
+
+  function elegirCliente(id: string) {
+    marcarSucio();
+    const elegido = clientes.find((c) => c.id === id);
+    if (elegido) {
+      setCliente({
+        nombre: elegido.nombre,
+        nif: elegido.nif,
+        direccion: elegido.direccion,
+        telefono: elegido.telefono,
+        correo: elegido.correo,
+      });
+    } else if (clienteId) {
+      setCliente({ nombre: "", nif: "", direccion: "", telefono: "", correo: "" });
+    }
+    setClienteId(id);
+  }
+
+  function cambiarCliente(campo: keyof typeof cliente, valor: string) {
+    marcarSucio();
+    setCliente((prev) => ({ ...prev, [campo]: valor }));
+    // Si cambia el nombre, ya no es el cliente guardado que se eligió.
+    if (campo === "nombre" && clienteId) {
+      const elegido = clientes.find((c) => c.id === clienteId);
+      if (elegido && elegido.nombre !== valor) setClienteId("");
+    }
+  }
+
   function actualizarLinea(index: number, cambios: Partial<Linea>) {
     marcarSucio();
     setLineas((prev) => prev.map((l, i) => (i === index ? { ...l, ...cambios } : l)));
+  }
+
+  // El servicio entra como una línea nueva con su precio; después es una línea más del
+  // presupuesto, así que retocarla no toca el catálogo.
+  function anadirServicio(id: string) {
+    const servicio = servicios.find((s) => s.id === id);
+    if (!servicio) return;
+    marcarSucio();
+    const nueva = { descripcion: servicio.descripcion, cantidad: 1, precioUnitario: servicio.precio };
+    setLineas((prev) =>
+      prev.length === 1 && !prev[0].descripcion && !prev[0].precioUnitario ? [nueva] : [...prev, nueva],
+    );
   }
 
   function anadirLinea() {
@@ -84,17 +162,76 @@ export default function NuevoPresupuestoForm({
       className="flex w-full max-w-2xl flex-col gap-8"
     >
       <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
+      <input type="hidden" name="datosTipo" value={JSON.stringify(datosTipo)} />
+
+      <fieldset className="flex flex-col gap-4">
+        <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+          Tipo de trabajo
+        </legend>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="sr-only">Tipo de trabajo</span>
+          <select
+            name="tipo"
+            value={tipo}
+            onChange={(e) => {
+              marcarSucio();
+              setTipo(e.target.value);
+            }}
+            className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value="">Elige el tipo…</option>
+            {Object.entries(TIPOS).map(([clave, t]) => (
+              <option key={clave} value={clave}>
+                {t.etiqueta}
+              </option>
+            ))}
+          </select>
+        </label>
+        {esTipo(tipo) && (
+          <>
+            <p className="self-start rounded-full bg-zinc-200 px-3 py-1 text-sm font-medium text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              Presupuesto de {TIPOS[tipo].etiqueta.toLowerCase()}
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {TIPOS[tipo].campos.map((campo) => (
+                <CampoDelTipo
+                  key={campo.clave}
+                  campo={campo}
+                  valor={datosTipo[campo.clave] ?? ""}
+                  onChange={(v) => cambiarDatoTipo(campo.clave, v)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </fieldset>
 
       <fieldset className="flex flex-col gap-4">
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Datos del cliente
         </legend>
+        <input type="hidden" name="clienteId" value={clienteId} />
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-zinc-600 dark:text-zinc-400">Cliente guardado</span>
+          <select
+            value={clienteId}
+            onChange={(e) => elegirCliente(e.target.value)}
+            className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+          >
+            <option value="">Cliente nuevo (escríbelo abajo)</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo label="Nombre del cliente" name="clienteNombre" defaultValue={inicial?.clienteNombre} required onInput={marcarSucio} />
-          <Campo label="NIF" name="clienteNif" defaultValue={inicial?.clienteNif} onInput={marcarSucio} />
-          <Campo label="Dirección" name="clienteDireccion" defaultValue={inicial?.clienteDireccion} onInput={marcarSucio} />
-          <Campo label="Teléfono" name="clienteTelefono" type="tel" defaultValue={inicial?.clienteTelefono} onInput={marcarSucio} />
-          <Campo label="Correo" name="clienteCorreo" type="email" defaultValue={inicial?.clienteCorreo} onInput={marcarSucio} />
+          <Campo label="Nombre del cliente" name="clienteNombre" value={cliente.nombre} required onChange={(v) => cambiarCliente("nombre", v)} />
+          <Campo label="NIF" name="clienteNif" value={cliente.nif} onChange={(v) => cambiarCliente("nif", v)} />
+          <Campo label="Dirección" name="clienteDireccion" value={cliente.direccion} onChange={(v) => cambiarCliente("direccion", v)} />
+          <Campo label="Teléfono" name="clienteTelefono" type="tel" value={cliente.telefono} onChange={(v) => cambiarCliente("telefono", v)} />
+          <Campo label="Correo" name="clienteCorreo" type="email" value={cliente.correo} onChange={(v) => cambiarCliente("correo", v)} />
         </div>
       </fieldset>
 
@@ -102,6 +239,24 @@ export default function NuevoPresupuestoForm({
         <legend className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Conceptos
         </legend>
+
+        {servicios.length > 0 && (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-zinc-600 dark:text-zinc-400">Añadir servicio guardado</span>
+            <select
+              value=""
+              onChange={(e) => anadirServicio(e.target.value)}
+              className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              <option value="">Elige un servicio…</option>
+              {servicios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.descripcion}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="flex flex-col gap-3">
           {lineas.map((linea, i) => (
@@ -207,16 +362,16 @@ function Campo({
   label,
   name,
   type = "text",
-  defaultValue,
+  value,
   required,
-  onInput,
+  onChange,
 }: {
   label: string;
   name: string;
-  defaultValue?: string;
+  value: string;
   type?: string;
   required?: boolean;
-  onInput?: () => void;
+  onChange: (valor: string) => void;
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
@@ -227,11 +382,49 @@ function Campo({
       <input
         name={name}
         type={type}
-        defaultValue={defaultValue}
+        value={value}
         required={required}
-        onInput={onInput}
+        onChange={(e) => onChange(e.target.value)}
         className="min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900"
       />
+    </label>
+  );
+}
+
+function CampoDelTipo({
+  campo,
+  valor,
+  onChange,
+}: {
+  campo: CampoTipo;
+  valor: string;
+  onChange: (valor: string) => void;
+}) {
+  const clases =
+    "min-h-11 rounded-md border border-zinc-300 px-3 py-2 text-base dark:border-zinc-700 dark:bg-zinc-900";
+  return (
+    <label className="flex flex-col gap-1 text-sm">
+      <span className="text-zinc-600 dark:text-zinc-400">{campo.etiqueta}</span>
+      {campo.control === "opciones" ? (
+        <select value={valor} onChange={(e) => onChange(e.target.value)} className={clases}>
+          <option value="">Elige…</option>
+          {campo.opciones?.map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={campo.control === "fecha" ? "date" : campo.control === "numero" ? "number" : "text"}
+          inputMode={campo.control === "numero" ? "decimal" : undefined}
+          min={campo.control === "numero" ? 0 : undefined}
+          step={campo.control === "numero" ? "any" : undefined}
+          value={valor}
+          onChange={(e) => onChange(e.target.value)}
+          className={clases}
+        />
+      )}
     </label>
   );
 }

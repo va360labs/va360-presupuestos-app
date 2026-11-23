@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import { datosDelTipo, esTipo, type DatosTipo } from "@/lib/tipos";
 
 const CONFIGURACION_ID = "singleton";
 const MAX_INTENTOS_NUMERACION = 12;
@@ -11,6 +12,9 @@ export type LineaInput = {
 };
 
 export type NuevoPresupuestoInput = {
+  tipo?: string;
+  datosTipo?: DatosTipo;
+  clienteId?: string;
   clienteNombre: string;
   clienteNif?: string;
   clienteDireccion?: string;
@@ -31,8 +35,14 @@ function validarYNormalizar(input: NuevoPresupuestoInput) {
     throw new Error("Añade al menos una línea de concepto.");
   }
 
+  const tipo = esTipo(input.tipo) ? input.tipo : null;
+  const datosTipo = tipo ? datosDelTipo(tipo, input.datosTipo ?? {}) : {};
+
   return {
     datos: {
+      tipo,
+      datosTipo: Object.keys(datosTipo).length > 0 ? JSON.stringify(datosTipo) : null,
+      clienteId: input.clienteId || null,
       clienteNombre: input.clienteNombre.trim(),
       clienteNif: input.clienteNif?.trim() || null,
       clienteDireccion: input.clienteDireccion?.trim() || null,
@@ -89,6 +99,28 @@ export async function establecerNumeroBase(numero: number) {
   });
 }
 
+// Si el cliente no viene de la lista, queda guardado para la próxima vez
+// (a menos que ya exista uno con ese mismo nombre). Va fuera de la transacción
+// de numeración para no añadirle escrituras que choquen con otros guardados.
+async function clienteDelPresupuesto(
+  tx: Pick<PrismaClient, "cliente">,
+  datos: ReturnType<typeof validarYNormalizar>["datos"],
+) {
+  if (datos.clienteId) return datos.clienteId;
+  const existente = await tx.cliente.findFirst({ where: { nombre: datos.clienteNombre } });
+  if (existente) return existente.id;
+  const nuevo = await tx.cliente.create({
+    data: {
+      nombre: datos.clienteNombre,
+      nif: datos.clienteNif,
+      direccion: datos.clienteDireccion,
+      telefono: datos.clienteTelefono,
+      correo: datos.clienteCorreo,
+    },
+  });
+  return nuevo.id;
+}
+
 function esReintentable(err: unknown) {
   if (!(err instanceof Prisma.PrismaClientKnownRequestError)) return false;
   // P2002: otro guardado se llevó ese número. P1008/P2034: la base estaba ocupada
@@ -104,6 +136,7 @@ function esperar(ms: number) {
 
 export async function crearPresupuesto(input: NuevoPresupuestoInput, client: PrismaClient = prisma) {
   const { datos, lineas } = validarYNormalizar(input);
+  const clienteId = await clienteDelPresupuesto(client, datos);
 
   for (let intento = 0; intento < MAX_INTENTOS_NUMERACION; intento++) {
     try {
@@ -118,7 +151,7 @@ export async function crearPresupuesto(input: NuevoPresupuestoInput, client: Pri
         const numero = Math.max(ultimo?.numero ?? 0, config?.numeroBase ?? 0) + 1;
 
         return tx.presupuesto.create({
-          data: { numero, ...datos, lineas: { create: lineas } },
+          data: { numero, ...datos, clienteId, lineas: { create: lineas } },
         });
       });
     } catch (err) {

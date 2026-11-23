@@ -1,35 +1,35 @@
 # Handoff de sesión
 
 - **Proyecto:** va360-presupuestos-app (VA360 Academy) — https://github.com/va360labs/va360-presupuestos-app (público)
-- **Rama actual:** chore/handoff-fase-1-hecha (sale de develop)
+- **Rama actual:** `develop`
 - **Backend de tracking:** Notion (base de datos "CURSO CLAUDE CODE PRESUPUESTOS")
-- **Tarea activa:** ninguna. Fase 1 completa y validada: 1.1 a 1.4 en "Hecho". Fases 2, 3 y 4 en "Por hacer".
+- **Estado:** Fases 1 y 2 enteras en "Hecho" (la 2 cerrada el 23/11/2026). Fases 3 y 4 en "Por hacer".
 
-## Qué se hizo en esta sesión
+## Qué se hizo en la última sesión (23/11/2026)
 
-- Creada la rama `develop` desde master y añadido el flujo a CLAUDE.md: cada tarea sale de `develop` en `feature/<número-de-tarea>` y vuelve a `develop` en "En pruebas"; a master solo se llega con una PR aprobada por el usuario, y solo con las tareas en "Hecho".
-- Publicado el repositorio público `va360labs/va360-presupuestos-app` con las ramas locales. Antes se revisó el `.gitignore` y el historial: sin secretos; `.env`, `dev.db`, `node_modules`, `.next`, `src/generated` y `.claude` no se suben.
-- Reescrito el historial local antes de publicar para quitar los trailers `Co-Authored-By` de 3 commits (no debe haber menciones a la herramienta ni como colaborador). Copia previa en un bundle del scratchpad de la sesión.
-- Abiertas y mergeadas en `develop` las PRs #1 (1.2), #2 (1.3), #3 (1.3.3), #4 (1.4) y #5 (normas: estado Bloqueado, evidencias en Notion, ámbito de taskkill). Integración con merge commit, no squash.
-- Rama `docs/estado-bloqueado-y-taskkill-scope` rehecha sobre `develop` (rebase) para evitar el conflicto con CLAUDE.md.
-- Borrada la rama `chore/branching-develop` (local y remota), ya integrada en `develop`.
-- El usuario validó la Fase 1; 1.2, 1.3, 1.4 y sus subtareas pasadas a "Hecho" en Notion.
+- Repositorio en orden: `feature/e2e-diez-presupuestos` integrada en `develop`; `.claude/` versionado (hooks, reglas, skill `cerrar-tarea`, plugin) salvo `.claude/settings.local.json`, que va al `.gitignore`; Prettier en `package.json`.
+- **Lockfile arreglado:** `overrides` en `package.json` hace que el adaptador de Prisma use el `better-sqlite3` 13 del proyecto. `npm install` ya funciona en Windows sin compilar nada.
+- **Fase 2 validada y cerrada:** batería completa en `develop`, 32 pruebas en verde en ordenador y iPhone 15, y 2 saltadas (la parte con duplicados de la prueba de diez presupuestos, que espera a "duplicar"). Las 12 tarjetas que faltaban, con su sección "Cierre" y su hoja de evidencias, pasan a "Hecho". vitest 8/8 y lint limpio.
+- `master` local actualizado con el de GitHub (PR #7).
 
-## Decisiones tomadas
+## Decisiones que siguen vigentes
 
-- **Ramas apiladas con PR encadenadas:** cada PR tenía como base la rama anterior; al integrarse se reorientaron a `develop`.
-- **master como rama por defecto en GitHub** (la primera rama subida la dejó en otra y se corrigió).
-- **Contribuidores:** el historial conserva los autores `Valen` y `va360labs` (mismo correo). Los mensajes de 4 commits nombran el archivo CLAUDE.md; es el nombre del archivo, se dejó.
-- **Sin protección de rama** en master todavía: la norma la sostiene el procedimiento, no GitHub.
+- Una rama por tarea desde `develop` (`feature/<número>-…`); las subtareas se commitean en la rama de su tarea padre. A `master` solo con PR que apruebe el usuario.
+- Una prueba e2e por criterio, con el código (`2.1.1 · …`) como prefijo; capturas en `evidencias/e2e/` y una hoja de evidencias por tarea o subtarea al cerrarla.
+- Los datos del cliente y las líneas se **copian** en el presupuesto: editar un cliente o un servicio no cambia presupuestos ya hechos.
+- El tipo de trabajo (boda, retrato, producto) es opcional para no invalidar los presupuestos de la Fase 1.
+- Las pruebas esperan a la hidratación (`abrir()` = goto + networkidle) por WebKit.
+- Commits, ramas y Notion sin ninguna mención a la herramienta.
 
-## Preguntas abiertas / pendiente de decidir
+## Pendiente
 
-- Aprobar y mergear la PR `develop` → `master` (la hace el usuario, no se mergea desde la sesión).
-- ¿Activar protección de la rama master en GitHub para exigir PR?
-- ¿Añadir `.claude/` al `.gitignore` del repo? Hoy solo se ignora por configuración local.
-- Pulir la redacción de las reglas 4 y 5 de CLAUDE.md ("tarea o una subtarea") y la errata "trabjo" en la regla 1.
-- ¿Renombrar CLAUDE.md o reescribir los 4 mensajes de commit que lo nombran? Solo si el usuario no quiere ni el nombre del archivo.
+- Proteger `master` en GitHub.
+- `playwright.config.ts` tiene `reuseExistingServer: false`: si queda un `next dev -p 3100` vivo, las pruebas no arrancan. Cerrarlo por su PID.
+- El puerto 3000 lo usa otro proyecto del equipo. Para arrancar la app usar otro (las pruebas usan el 3100).
+- El cronometraje a mano de la 2.4 queda para cuando Marta la use de verdad.
 
 ## Próximo paso concreto
 
-Cuando el usuario apruebe y mergee la PR a master, empezar la Fase 2 (2.1 Mis clientes guardados): mover 2.1 a "En desarrollo" en Notion y crear `feature/2.1` desde `develop`.
+**La Fase 4 (Mis datos y el PDF), antes que la Fase 3.** El PDF solo necesita lo que ya existe en las fases 1 y 2 (número, cliente, conceptos, condiciones) más los datos de Marta. Empezar por la 4.1 "Mis datos y mi logo": mover la tarea y sus subtareas a "En desarrollo", crear `feature/4.1-…` desde `develop` y escribir primero la prueba e2e roja. La 4.5 (repaso de los quince criterios) depende de la Fase 3 y se deja en "Bloqueado". El esquema solo tiene `numeroBase` en `Configuracion`: logo, datos fiscales e impuestos son nuevos.
+
+La Fase 3 (buscar, estados, días abiertos con rojo a los 30 y duplicar) va después. Para el criterio 8, la prueba siembra un presupuesto con `createdAt` de hace 31 días directamente en la base e2e (`os.tmpdir()/presupuestos-e2e/e2e.db`). La parte con duplicados de la prueba de diez presupuestos se activa cuando exista "duplicar".

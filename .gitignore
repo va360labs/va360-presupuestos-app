@@ -45,3 +45,13 @@ next-env.d.ts
 # prisma sqlite dev database
 /dev.db
 /dev.db-journal
+
+# playwright
+/test-results/
+/playwright-report/
+
+# playwright mcp
+/.playwright-mcp/
+
+# ajustes personales de Claude Code (no se comparten)
+/.claude/settings.local.json
