@@ -10,7 +10,8 @@ export function capturarAlTerminar() {
   test.afterEach(async ({ page }, testInfo) => {
     const codigo = testInfo.title.match(/^(\d+(?:\.\d+)*)\s·/)?.[1];
     const criterio = testInfo.title.match(/^Criterio (\d+)/)?.[1];
-    const base = codigo ?? `criterio-${criterio}`;
+    const terminado = testInfo.title.match(/^Terminado (\d+[ab]?)\s·/)?.[1];
+    const base = codigo ?? (terminado ? `terminado-${terminado}` : `criterio-${criterio}`);
     fs.mkdirSync(EVIDENCIAS, { recursive: true });
     await page.screenshot({
       path: path.join(EVIDENCIAS, `${base}-${testInfo.project.name}.png`),

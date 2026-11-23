@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 import os from "node:os";
 import path from "node:path";
 
-const PUERTO = 3100;
+const PUERTO = Number(process.env.E2E_PORT ?? 3100);
 // Base propia de las pruebas: nunca se toca dev.db.
 const BD_E2E = path.join(os.tmpdir(), "presupuestos-e2e", "e2e.db");
 
